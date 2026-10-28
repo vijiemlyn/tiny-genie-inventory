@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -40,10 +39,10 @@ async function connect(){
  if(!/^https:\/\/[a-zA-Z0-9-]+\.supabase\.co$/.test(url)||!key.startsWith('sb_publishable_')){status('setupStatus','Check the Project URL and make sure the key starts with sb_publishable_.',true);return}
  localStorage.setItem(keyUrl,url);localStorage.setItem(keyPub,key);
  if(!window.supabase){status('setupStatus','Could not load the Supabase library. Check internet access and reload.',true);return}
- client=window.supabase.createClient(url,key);$('setupNotice').classList.add('hidden');$('authPanel').classList.remove('hidden');status('authStatus','Connection details saved in this browser. Sign in with your Supabase user account.');
+ client=window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});$('setupNotice').classList.add('hidden');$('authPanel').classList.remove('hidden');status('authStatus','Connection details saved in this browser. Sign in once; this device will remember your session.');
 }
 $('connectBtn').addEventListener('click',connect);
-const savedUrl=localStorage.getItem(keyUrl),savedKey=localStorage.getItem(keyPub);if(savedUrl&&savedKey){$('projectUrl').value=savedUrl;$('publishableKey').value=savedKey;if(window.supabase){client=window.supabase.createClient(savedUrl,savedKey);$('setupNotice').classList.add('hidden');$('authPanel').classList.remove('hidden')}}
+const savedUrl=localStorage.getItem(keyUrl),savedKey=localStorage.getItem(keyPub);if(savedUrl&&savedKey){$('projectUrl').value=savedUrl;$('publishableKey').value=savedKey;if(window.supabase){client=window.supabase.createClient(savedUrl,savedKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});$('setupNotice').classList.add('hidden');client.auth.getSession().then(async({data,error})=>{if(error){$('authPanel').classList.remove('hidden');status('authStatus','Please sign in again: '+error.message,true);return}if(data.session){user=data.session.user;await enterApp()}else{$('authPanel').classList.remove('hidden')}})}}
 async function login(){
  if(!client){status('authStatus','Connect your Supabase project first.',true);return}
  const email=$('email').value.trim(),password=$('password').value;if(!email||!password){status('authStatus','Enter your email and password.',true);return}
